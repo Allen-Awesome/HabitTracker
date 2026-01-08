@@ -29,6 +29,10 @@ interface GoalDao {
     @Query("UPDATE goals SET currentProgress = currentProgress + :amount, todayProgress = todayProgress + :amount, weekProgress = weekProgress + :amount, monthProgress = monthProgress + :amount, lastUpdateDate = :date WHERE id = :goalId")
     suspend fun addProgress(goalId: Long, amount: Double, date: LocalDate = LocalDate.now())
     
+    // 减少进度（撤回）- 确保不会变成负数
+    @Query("UPDATE goals SET currentProgress = MAX(0, currentProgress - :amount), todayProgress = MAX(0, todayProgress - :amount), weekProgress = MAX(0, weekProgress - :amount), monthProgress = MAX(0, monthProgress - :amount), lastUpdateDate = :date WHERE id = :goalId")
+    suspend fun subtractProgress(goalId: Long, amount: Double, date: LocalDate = LocalDate.now())
+    
     @Query("UPDATE goals SET currentProgress = :progress WHERE id = :goalId")
     suspend fun setProgress(goalId: Long, progress: Double)
     

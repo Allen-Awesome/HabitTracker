@@ -26,6 +26,8 @@ class GoalRepository(
     
     suspend fun addProgress(goalId: Long, amount: Double) = goalDao.addProgress(goalId, amount)
     
+    suspend fun subtractProgress(goalId: Long, amount: Double) = goalDao.subtractProgress(goalId, amount)
+    
     // 周期进度重置
     suspend fun resetDailyProgress(goalId: Long) = goalDao.resetDailyProgress(goalId)
     

@@ -113,6 +113,13 @@ class GoalViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     
+    // 减少进度（撤回）
+    fun subtractQuickProgress(goalId: Long, amount: Double) {
+        viewModelScope.launch {
+            repository.subtractProgress(goalId, amount)
+        }
+    }
+    
     // 选择日期
     fun selectDate(date: LocalDate) {
         _selectedDate.value = date

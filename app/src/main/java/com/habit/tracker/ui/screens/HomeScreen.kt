@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.habit.tracker.data.model.Goal
 import com.habit.tracker.ui.theme.AppColors
+import com.habit.tracker.ui.util.rememberFeedbackManager
 import com.habit.tracker.ui.viewmodel.GoalViewModel
 
 // 卡片背景色列表（参考VegetableOrderUI的柔和配色）
@@ -58,6 +59,7 @@ fun HomeScreen(
     onDailyPlanClick: () -> Unit
 ) {
     val goals by viewModel.allGoals.collectAsState()
+    val feedback = rememberFeedbackManager()
     
     Scaffold(
         topBar = {
@@ -77,7 +79,10 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onDailyPlanClick) {
+                    IconButton(onClick = { 
+                        feedback.lightTap()
+                        onDailyPlanClick() 
+                    }) {
                         Icon(
                             Icons.Default.DateRange, 
                             contentDescription = "每日计划",
@@ -92,7 +97,10 @@ fun HomeScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onAddGoal,
+                onClick = { 
+                    feedback.confirm()
+                    onAddGoal() 
+                },
                 containerColor = AppColors.gold,
                 shape = CircleShape
             ) {
@@ -161,7 +169,13 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(goalsWithDaily) { goal ->
-                                TodayProgressCard(goal = goal, onClick = { onGoalClick(goal.id) })
+                                TodayProgressCard(
+                                    goal = goal, 
+                                    onClick = { 
+                                        feedback.lightTap()
+                                        onGoalClick(goal.id) 
+                                    }
+                                )
                             }
                         }
                     }
@@ -182,7 +196,10 @@ fun HomeScreen(
                         goal = goal, 
                         cardColors = goalCardColors[colorIndex],
                         progressColors = goalColors[colorIndex],
-                        onClick = { onGoalClick(goal.id) }
+                        onClick = { 
+                            feedback.lightTap()
+                            onGoalClick(goal.id) 
+                        }
                     )
                 }
                 

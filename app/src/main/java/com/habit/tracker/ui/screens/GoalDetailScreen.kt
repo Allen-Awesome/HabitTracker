@@ -28,6 +28,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.habit.tracker.ui.theme.AppColors
+import com.habit.tracker.ui.util.rememberFeedbackManager
 import com.habit.tracker.ui.viewmodel.GoalViewModel
 import java.time.LocalDate
 
@@ -44,6 +45,8 @@ fun GoalDetailScreen(
     var quickAddAmount by remember { mutableStateOf("") }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var tomorrowPlan by remember { mutableStateOf("") }
+    
+    val feedback = rememberFeedbackManager()
     
     if (goal == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -66,12 +69,18 @@ fun GoalDetailScreen(
             TopAppBar(
                 title = { Text(goal.name, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { 
+                        feedback.lightTap()
+                        onBack() 
+                    }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "返回")
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showDeleteDialog = true }) {
+                    IconButton(onClick = { 
+                        feedback.lightTap()
+                        showDeleteDialog = true 
+                    }) {
                         Icon(
                             Icons.Default.Delete, 
                             contentDescription = "删除",
@@ -273,10 +282,33 @@ fun GoalDetailScreen(
                         shape = RoundedCornerShape(12.dp)
                     )
                     
+                    // 减少按钮
+                    FilledTonalButton(
+                        onClick = {
+                            quickAddAmount.toDoubleOrNull()?.let { amount ->
+                                if (amount > 0) {
+                                    feedback.reject()
+                                    viewModel.subtractQuickProgress(goal.id, amount)
+                                    quickAddAmount = ""
+                                }
+                            }
+                        },
+                        enabled = quickAddAmount.toDoubleOrNull() != null,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.height(56.dp),
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = Color(0xFFFFEBEE)
+                        )
+                    ) {
+                        Text("−", fontSize = 20.sp, color = Color(0xFFE53935))
+                    }
+                    
+                    // 增加按钮
                     Button(
                         onClick = {
                             quickAddAmount.toDoubleOrNull()?.let { amount ->
                                 if (amount > 0) {
+                                    feedback.confirm()
                                     viewModel.addQuickProgress(goal.id, amount)
                                     quickAddAmount = ""
                                 }
@@ -286,12 +318,18 @@ fun GoalDetailScreen(
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.height(56.dp)
                     ) {
-                        Icon(Icons.Outlined.Done, contentDescription = null)
+                        Icon(Icons.Outlined.Done, contentDescription = "增加")
                     }
                 }
                 
-                // 快捷按钮
+                // 快捷按钮 - 增加
                 Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "快速增加",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -299,10 +337,39 @@ fun GoalDetailScreen(
                     listOf(1, 5, 10).forEach { num ->
                         AssistChip(
                             onClick = { 
+                                feedback.confirm()
                                 viewModel.addQuickProgress(goal.id, num.toDouble())
                             },
                             label = { Text("+$num") },
                             modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+                
+                // 快捷按钮 - 减少（撤回）
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "快速撤回",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf(1, 5, 10).forEach { num ->
+                        AssistChip(
+                            onClick = { 
+                                feedback.reject()
+                                viewModel.subtractQuickProgress(goal.id, num.toDouble())
+                            },
+                            label = { Text("-$num") },
+                            modifier = Modifier.weight(1f),
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = Color(0xFFFFEBEE),
+                                labelColor = Color(0xFFE53935)
+                            )
                         )
                     }
                 }
@@ -334,6 +401,7 @@ fun GoalDetailScreen(
                         onClick = {
                             tomorrowPlan.toDoubleOrNull()?.let { amount ->
                                 if (amount > 0) {
+                                    feedback.confirm()
                                     viewModel.setDailyPlan(
                                         goal.id,
                                         LocalDate.now().plusDays(1),
